@@ -7,7 +7,8 @@ symbol_table = {
     "R4": 4, "R5": 5, "R6": 6, "R7": 7,
     "R8": 8, "R9": 9, "R10": 10, "R11": 11,
     "R12": 12, "R13": 13, "R14": 14, "R15": 15,
-    "KBD": 24576, "SCREEN": 16384
+    "KBD": 24576, "SCREEN": 16384, "SP": 0, "LCL": 1,
+    "ARG": 2, "THIS":3, "THAT":4
 }
 
 c_comp_table = {
@@ -220,6 +221,9 @@ def asm(path):
     else:
         print(f"\033[94mstage:\033[0m machine code generation - \033[91mfailed, with {error_i} errors\033[0m")
     print(f"\033[95mstatistics:\033[0m generated {len(target_code)} lines in total, within {'%.4f' % run_time}s")
+
+    with open("result.hack", 'w') as out:
+        out.writelines([str(i)+'\n' for i in target_code])
 
 
 def main():
