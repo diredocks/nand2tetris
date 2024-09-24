@@ -81,8 +81,7 @@ M=0
 @SP
 A=M-1
 M=1
-@ed
-0;JMP
+(ed)
 ```
 
 ## Stack Operations
