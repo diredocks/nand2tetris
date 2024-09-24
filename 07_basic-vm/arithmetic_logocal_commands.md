@@ -61,16 +61,28 @@ M=D
 ```asm
 @SP
 A=M-1
-D=M       // Load second operand into D
+D=M
 A=A-1
-D=M-D     // Subtract the two operands
-
+M=M-D // calc A-B
+D=A+1
+@SP
+M=D // save result into stack
+A=D-1 // jump to result
+D=M
 @eq
-D;JEQ     // If the result is 0 (equal), jump to 'eq'
-
-@SP       // Not equal case
+D;JEQ
+// if not eq
+@SP
 A=M-1
-M=0       // Set
+M=0
+@ed
+0;JMP
+(eq)
+@SP
+A=M-1
+M=1
+@ed
+0;JMP
 ```
 
 ## Stack Operations
