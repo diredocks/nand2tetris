@@ -96,12 +96,13 @@ segment_map = {
     "argument": "ARG",
     "this": "THIS",
     "that": "THAT",
-    "local": "LCL"
+    "local": "LCL",
+    "static": "STATIC"
 }
 
 def main():
     label_i = 0
-    source = read_source("./constant_test.vm")
+    source = read_source("./static_test.vm")
     gen = []
     for each in source:
         cmd = each[0]
