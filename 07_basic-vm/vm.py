@@ -16,8 +16,8 @@ def arithmetic_op(operator):
     return \
         snippets["jump_to_last_operand"]\
         + snippets["jump_up_operand"]\
-        + [f"M=M{operator}D"] if operator == "-"\
-        else [f"M=D{operator}M"]\
+        + ([f"M=M{operator}D"] if operator == "-"\
+        else [f"M=D{operator}M"])\
         + snippets["save_stack_top_position"]
 
 def comparison_op(operator, label_i):
@@ -87,9 +87,9 @@ def writer(line, label_i):
 
 def main():
     label_i = 0
-    source = read_source("./basic_test.vm")
+    source = read_source("./simple_add.vm")
     for each in source:
-        print(writer(each, label_i))
+        print("\n".join(writer(each, label_i)))
         label_i = label_i + 1
 
 if __name__ == "__main__":
