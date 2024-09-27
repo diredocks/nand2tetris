@@ -1,12 +1,3 @@
-snippets = {
-    "jump_to_last_operand": ["@SP", "A=M-1", "D=M"],
-    "jump_up_operand": ["A=A-1"],
-    "save_stack_top_position": ["D=A+1", "@SP", "M=D"],
-    "constant_push": lambda i: [f"@{i}", "D=A", "@SP", "A=M", "M=D"]
-}
-
-label_i = 0
-
 def source_beauty(line):
     line = line.strip()
     if '//' in line:
@@ -29,9 +20,7 @@ def arithmetic_op(operator):
         else [f"M=D{operator}M"]\
         + snippets["save_stack_top_position"]
 
-def comparison_op(operator):
-    global label_i
-    label_i = label_i + 1
+def comparison_op(operator, label_i):
     return \
         snippets["jump_to_last_operand"]\
         + snippets["jump_up_operand"]\
@@ -42,33 +31,53 @@ def comparison_op(operator):
         + [f"(cmp{label_i})", "@SP", "A=M-1", "M=-1"]\
         + [f"(ed{label_i})"]
 
-binary_parser = {
-    "add": arithmetic_op("+"),
-    "sub": arithmetic_op("-"),
-    "and": arithmetic_op("&"),
-    "or": arithmetic_op("|"),
-    "eq": comparison_op("JEQ"),
-    "ne": comparison_op("JNE"),
-    "lt": comparison_op("JLT"),
-    "gt": comparison_op("JGT"),
-    "lte": comparison_op("JLE"),
-    "gte": comparison_op("JGE")
+snippets = {
+    "jump_to_last_operand": ["@SP", "A=M-1", "D=M"],
+    "jump_up_operand": ["A=A-1"],
+    "save_stack_top_position": ["D=A+1", "@SP", "M=D"],
+    "constant_push": lambda i: [f"@{i}", "D=A", "@SP", "A=M", "M=D"]
 }
 
-push_pop_parser = {
-    "push": snippets["constant_push"](12) + snippets["save_stack_top_position"]
+operator_map = {
+    "arithmetic_op": {
+        "add": "+",
+        "sub": "-",
+        "and": "&",
+        "or": "|"
+    },
+    "comparison_op": {
+        "eq": "JEQ",
+        "ne": "JNE",
+        "lt": "JLT",
+        "gt": "JGT",
+        "lte": "JLE",
+        "gte": "JGE"
+    }
 }
+
+def writer(line, label_i):
+    cmd = line[0]
+    if cmd in operator_map["arithmetic_op"].keys():
+        return arithmetic_op(
+                operator_map["arithmetic_op"][cmd]
+                )
+    elif cmd in operator_map["comparison_op"].keys():
+        return comparison_op(
+                operator_map["comparison_op"][cmd], label_i
+                )
+    elif cmd == "push":
+        if line[1] == "constant":
+            return snippets["constant_push"](line[2])\
+                    + snippets["save_stack_top_position"]
+    else:
+        return None
 
 def main():
+    label_i = 0
     source = read_source("./basic_test.vm")
-    '''
     for each in source:
-        if each[0] not in parser.keys():
-            print("Unknow token:", each[0])
-        else:
-            print(parser[each[0]])
-    '''
-    print('\n'.join(push_pop_parser["push"]))
+        print(writer(each, label_i))
+        label_i = label_i + 1
 
 if __name__ == "__main__":
     main()
