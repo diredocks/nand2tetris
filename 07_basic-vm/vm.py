@@ -31,9 +31,14 @@ def comparison_op(operator, label_i):
         + [f"(cmp{label_i})", "@SP", "A=M-1", "M=-1"]\
         + [f"(ed{label_i})"]
 
+def unary_op(operator):
+    return \
+        snippets["jump_to_last_operand"]\
+        + [f"M={operator}M"]\
+
 snippets = {
-    "jump_to_last_operand": ["@SP", "A=M-1", "D=M"],
-    "jump_up_operand": ["A=A-1"],
+    "jump_to_last_operand": ["@SP", "A=M-1"],
+    "jump_up_operand": ["D=M", "A=A-1"],
     "save_stack_top_position": ["D=A+1", "@SP", "M=D"],
     "constant_push": lambda i: [f"@{i}", "D=A", "@SP", "A=M", "M=D"]
 }
@@ -52,6 +57,10 @@ operator_map = {
         "gt": "JGT",
         "lte": "JLE",
         "gte": "JGE"
+    },
+    "unary_op": {
+        "not": "!",
+        "neg": "-"
     }
 }
 
@@ -64,6 +73,10 @@ def writer(line, label_i):
     elif cmd in operator_map["comparison_op"].keys():
         return comparison_op(
                 operator_map["comparison_op"][cmd], label_i
+                )
+    elif cmd in operator_map["unary_op"].keys():
+        return unary_op(
+                operator_map["unary_op"][cmd]
                 )
     elif cmd == "push":
         if line[1] == "constant":
