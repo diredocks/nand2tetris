@@ -22,7 +22,17 @@ snippets = {
 }
 
 snippets_lam = {
-    "temp_push":\
+    "pointer_push":\
+        lambda segment:\
+        [f"@{segment}", "D=M"]\
+        + snippets["jump_to_stack_head"] + ["M=D"]\
+        + snippets["save_stack_top_position_push"],
+    "pointer_pop":\
+        lambda segment:\
+        snippets["jump_to_last_operand"] + ["D=M"]\
+        + [f"@{segment}", "M=D"]\
+        + snippets["save_stack_top_position_pop"],
+   "temp_push":\
         lambda offset:\
         [f"@{int(offset)+5}", "D=M"]\
         + snippets["jump_to_stack_head"] + ["M=D"]\
@@ -102,7 +112,7 @@ segment_map = {
 
 def main():
     label_i = 0
-    source = read_source("./static_test.vm")
+    source = read_source("./pointer_test.vm")
     gen = []
     for each in source:
         cmd = each[0]
@@ -119,6 +129,10 @@ def main():
                 gen.append(snippets_lam["constant_push"](each[2]))
             elif each[1] == "temp":
                 gen.append(snippets_lam["temp_push"](each[2]))
+            elif each[1] == "pointer" and each[2] == "0":
+                gen.append(snippets_lam["pointer_push"]("THIS"))
+            elif each[1] == "pointer" and each[2] == "1":
+                gen.append(snippets_lam["pointer_push"]("THAT"))
             elif each[1] in segment_map.keys():
                 gen.append(snippets_lam["segment_push"](each[2], segment_map[each[1]]))
             else:
@@ -128,6 +142,10 @@ def main():
                 gen.append(snippets_lam["segment_pop"](each[2], segment_map[each[1]]))
             elif each[1] == "temp":
                 gen.append(snippets_lam["temp_pop"](each[2]))
+            elif each[1] == "pointer" and each[2] == "0":
+                gen.append(snippets_lam["pointer_pop"]("THIS"))
+            elif each[1] == "pointer" and each[2] == "1":
+                gen.append(snippets_lam["pointer_pop"]("THAT"))
             else:
                 pass
     gen = [each for eaches in gen for each in eaches]
