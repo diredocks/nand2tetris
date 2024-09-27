@@ -101,7 +101,7 @@ segment_map = {
 
 def main():
     label_i = 0
-    source = read_source("./basic_test.vm")
+    source = read_source("./constant_test.vm")
     gen = []
     for each in source:
         cmd = each[0]
@@ -112,7 +112,7 @@ def main():
             gen.append(snippets_lam["comparison_op"](operator_map["comparison_op"][cmd], label_i))
             label_i = label_i + 1
         elif cmd in operator_map["unary_op"].keys():
-            gen.append(snippets_lam["unary_op"](operator_map["unary_op"]))
+            gen.append(snippets_lam["unary_op"](operator_map["unary_op"][cmd]))
         elif cmd == "push":
             if each[1] == "constant":
                 gen.append(snippets_lam["constant_push"](each[2]))
@@ -121,14 +121,14 @@ def main():
             elif each[1] in segment_map.keys():
                 gen.append(snippets_lam["segment_push"](each[2], segment_map[each[1]]))
             else:
-                print(each)
+                pass
         elif cmd == "pop":
             if each[1] in segment_map.keys():
                 gen.append(snippets_lam["segment_pop"](each[2], segment_map[each[1]]))
             elif each[1] == "temp":
                 gen.append(snippets_lam["temp_pop"](each[2]))
             else:
-                print(each)
+                pass
     gen = [each for eaches in gen for each in eaches]
     print("\n".join(gen))
 
