@@ -13,6 +13,7 @@ def read_source(file_name):
     return source
 
 snippets = {
+    "jump_to_stack_head": ["@SP", "A=M"],
     "jump_to_last_operand": ["@SP", "A=M-1"],
     "jump_up_operand": ["D=M", "A=A-1"],
     "save_stack_top_position_uni": ["D=A+1", "@SP", "M=D"],
@@ -21,6 +22,27 @@ snippets = {
 }
 
 snippets_lam = {
+    "temp_push":\
+        lambda offset:\
+        [f"@{int(offset)+5}", "D=M"]\
+        + snippets["jump_to_stack_head"] + ["M=D"]\
+        + snippets["save_stack_top_position_push"],
+    "temp_pop":\
+        lambda offset:\
+        snippets["jump_to_last_operand"] + ["D=M"]\
+        + [f"@{int(offset)+5}", "M=D"]\
+        + snippets["save_stack_top_position_pop"],
+    "segment_push":\
+        lambda offset, segment:\
+        [f"@{segment}", "A=M"]\
+        + ["A=A+1"]*int(offset) + ["D=M"]\
+        + snippets["jump_to_stack_head"] + ["M=D"]\
+        + snippets["save_stack_top_position_push"],
+    "segment_pop":\
+        lambda offset, segment:\
+        snippets["jump_to_last_operand"] + ["D=M"]\
+        + [f"@{segment}", "A=M"] + ["A=A+1"]*int(offset)\
+        + ["M=D"] + snippets["save_stack_top_position_pop"],
     "constant_push":\
         lambda i:\
         [f"@{i}", "D=A", "@SP", "A=M", "M=D"]\
@@ -67,14 +89,48 @@ operator_map = {
     "unary_op": {
         "not": "!",
         "neg": "-"
-    }
+    },
+}
+
+segment_map = {
+    "argument": "ARG",
+    "this": "THIS",
+    "that": "THAT",
+    "local": "LCL"
 }
 
 def main():
     label_i = 0
-    source = read_source("./simple_add.vm")
-    for key in operator_map:
-        print("eq" in operator_map[key].keys())
+    source = read_source("./basic_test.vm")
+    gen = []
+    for each in source:
+        cmd = each[0]
+        gen.append(["//"+" ".join(each)])
+        if cmd in operator_map["arithmetic_op"].keys():
+            gen.append(snippets_lam["arithmetic_op"](operator_map["arithmetic_op"][cmd]))
+        elif cmd in operator_map["comparison_op"].keys():
+            gen.append(snippets_lam["comparison_op"](operator_map["comparison_op"][cmd], label_i))
+            label_i = label_i + 1
+        elif cmd in operator_map["unary_op"].keys():
+            gen.append(snippets_lam["unary_op"](operator_map["unary_op"]))
+        elif cmd == "push":
+            if each[1] == "constant":
+                gen.append(snippets_lam["constant_push"](each[2]))
+            elif each[1] == "temp":
+                gen.append(snippets_lam["temp_push"](each[2]))
+            elif each[1] in segment_map.keys():
+                gen.append(snippets_lam["segment_push"](each[2], segment_map[each[1]]))
+            else:
+                print(each)
+        elif cmd == "pop":
+            if each[1] in segment_map.keys():
+                gen.append(snippets_lam["segment_pop"](each[2], segment_map[each[1]]))
+            elif each[1] == "temp":
+                gen.append(snippets_lam["temp_pop"](each[2]))
+            else:
+                print(each)
+    gen = [each for eaches in gen for each in eaches]
+    print("\n".join(gen))
 
 if __name__ == "__main__":
     main()
